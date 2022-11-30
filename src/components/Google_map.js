@@ -1,6 +1,6 @@
 import React, {useEffect, useRef } from "react";
 
-export default function GoogleMap({ lat, lng, zoom, markerCount, markerDetails }) {
+export default function GoogleMap({ lat, lng, zoom, markerCount, markerDetails, setMarkerCoordinates }) {
 
   // Global Refs to the Map Container and the Google Map Object - They are created after the component is rendered
   const mapContainer = useRef(null)
@@ -23,14 +23,19 @@ export default function GoogleMap({ lat, lng, zoom, markerCount, markerDetails }
     map.current.setZoom(zoom);
   }, [zoom])
 
+
+  // Add a marker when the marker counter is incremented
   useEffect(() => {
     const contentString = `<div><h1>${markerDetails.title}</h1><h2>${markerDetails.shop}</h2></div>`
     const infoWindow = new google.maps.InfoWindow({
       content: contentString,
     });
 
+    const center = map.current.getCenter().toJSON()
+    setMarkerCoordinates(center)
+
     let marker = new google.maps.Marker();
-    marker.setPosition(map.current.getCenter().toJSON())
+    marker.setPosition(center)
     marker.setMap(map.current);
     marker.addListener('mouseover', event => {infoWindow.open({
       anchor:marker,
@@ -39,7 +44,6 @@ export default function GoogleMap({ lat, lng, zoom, markerCount, markerDetails }
     marker.addListener('mouseout', event => {infoWindow.close()})
   }, [markerCount])
 
-  // How do we stop the div from rerendering without "shouldComponentUpdate"?
   
   return <>
     <div ref={mapContainer} className="map-box"></div>

@@ -1,33 +1,48 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import useLocalStorage from "../hooks/use-local-storage";
 import TopBar from "./TopBar";
 import GoogleMap from "./Google_map";
 
-export default function App(){
+const LOCATIONS = {
+  TELAVIV: {lat: 32.0042938, lng: 34.7615399 }, 
+  SALE: {lat: 53.4160301, lng:-2.345692},
+  BROMLEY: {lat: 51.4142897, lng:0.0186523},
+  SYDNEY: {lat: -34.397,lng: 150.644}, 
+  TALSHAHAR: {lat: 31.8055516, lng:34.8975763}
+}
 
-  const [coordinates, setCoordinates] = useState({ lat: -34.397, lng: 150.644 })
-  const [zoom, setZoom] = useState(8)
-  const [markerDetails, setMarkerDetails] = useState({ title: '', shop: '' })
-  const [markerCount, setMarkerCount] = useState(0);
+export default function App(){
+  const [coordinates, setCoordinates] = useLocalStorage({ lat: -34.397, lng: 150.644 }, 'coordinates')
+  const [zoom, setZoom] = useLocalStorage(8, 'zoom')
+  const [markerDetails, setMarkerDetails] = useLocalStorage({ title: '', shop: '' }, 'markerDetails')
+  const [markerCount, setMarkerCount] = useLocalStorage(0, 'markerCount');
+  const [markers, setMarkers] = useLocalStorage([], 'markers')
   const input = useRef(null)
 
-  function reposition(city) {
+
+
+  function setLocation(city){
     switch (city) {
-      case "tel aviv":
-        setCoordinates({ lat: 32.0042938, lng: 34.7615399 });
+      case LOCATIONS.TELAVIV:
+        setCoordinates(LOCATIONS.TELAVIV);
         break;
-      case "london":
-        setCoordinates({ lat: 51.528308, lng: -0.3817828 });
+      case LOCATIONS.TALSHAHAR:
+        setCoordinates(LOCATIONS.TALSHAHAR);
         break;
-      case "paris":
-        setCoordinates({ lat: 48.8587741, lng: 2.2069754 });
+      case LOCATIONS.SALE:
+        setCoordinates(LOCATIONS.SALE)
+        break
+      case LOCATIONS.BROMLEY:
+        setCoordinates(LOCATIONS.BROMLEY)
         break;
-      default:
-        alert("wrong city");
+      case LOCATIONS.SYDNEY:
+        setCoordinates(LOCATIONS.SYDNEY)
+        break;;
     }
   }
 
   function updateZoom() {
-    setZoom(Number(input.value))
+    setZoom(Number(input.current.value))
   };
 
   function showLocation() {
@@ -38,10 +53,23 @@ export default function App(){
   }
 
   const updateDetails = event => {
-    setMarkerDetails({...markerDetails, [event.target.name]: event.target.value})
+    setMarkerDetails({ ...markerDetails, [event.target.name]: event.target.value })
+    
   }
 
- 
+  function setMarkerCoordinates(coordinates) {
+    setCoordinates(coordinates)
+  }
+
+  const addMarker = () => {
+    setMarkerCount(markerCount + 1)
+    setMarkers([...markers, {...markerDetails, coordinates}])
+    console.log(markers)
+  }
+
+  useEffect(() => {
+    markers.for
+  },[])
 
 
     return (
@@ -49,18 +77,12 @@ export default function App(){
         <TopBar>Google Maps Example in React</TopBar>
         <div className="hbox mb20">
           {/* How should we format components with lots of props?  */}
-          <button onClick={() => reposition("tel aviv")}> Tel Aviv </button>
-          <button onClick={() => reposition("paris")}> Paris </button>
-          <button onClick={() => reposition("london")}>London</button>
-          <input
-            ref={input}
-            type="number"
-            min="8"
-            max="16"
-            placeholder="8"
-            onChange={updateZoom}
-          />
-        <button onClick={showLocation}>Where Am I?</button>
+          <button onClick={() => setLocation(LOCATIONS.TELAVIV)}> Tel Aviv </button>
+          <button onClick={() => setLocation(LOCATIONS.TALSHAHAR)}> Tal Shahar </button>
+          <button onClick={() => setLocation(LOCATIONS.BROMLEY)}> Bromley </button>
+          <button onClick={() => setLocation(LOCATIONS.SALE)}> Sale </button>
+          <button onClick={() => setLocation(LOCATIONS.SYDNEY)}> Sydney </button>
+          <button onClick={showLocation}>Where Am I?</button>
         </div>
         
         <div className="hbox mb20">
@@ -73,9 +95,17 @@ export default function App(){
             <option value='next'>Next</option>
             <option value='marks'>Marks & Spencers</option>
           </select>
-          <button onClick={() => setMarkerCount(markerCount + 1)}>Add Marker</button>
+          <button onClick={addMarker}>Add Marker</button>
+          <input
+            ref={input}
+            type="number"
+            min="8"
+            max="16"
+            value={zoom}
+            onChange={updateZoom}
+          />
         </div>
-        <GoogleMap {...{zoom, markerCount, markerDetails}} lat={coordinates.lat} lng={coordinates.lng} />
+        <GoogleMap {...{zoom, markerCount, markerDetails, setMarkerCoordinates}} lat={coordinates.lat} lng={coordinates.lng} />
       </div>
     )
 }
